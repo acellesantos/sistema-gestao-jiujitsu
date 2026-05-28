@@ -1,9 +1,10 @@
 import os
-# Aqui nós importamos as funções do arquivo que acabamos de criar!
 from alunos import cadastrar_aluno, listar_alunos
+# 🆕 Importando as funções do módulo financeiro
+from financeiro import disparar_mensagens_cobranca 
 
 def exibir_menu(faixa):
-    while True: # Loop para o menu continuar rodando até o usuário decidir sair
+    while True:
         os.system('cls' if os.name == 'nt' else 'clear')
         print("=" * 40)
         print(f"🥋 GESTÃO JIU-JITSU - PERMISSÃO: {faixa.upper()}")
@@ -11,13 +12,13 @@ def exibir_menu(faixa):
         
         print("[1] Visualizar Horários e Competições")
         
-        # 👀 Opções visíveis apenas para Faixa Azul e acima
         if faixa.lower() in ['azul', 'roxa', 'marrom', 'preta']:
             print("[2] Cadastrar Novo Aluno")
             print("[3] Listar Alunos Matriculados")
             
+        # 🟤 Apenas Faixa Marrom e Preta podem acessar o financeiro
         if faixa.lower() in ['marrom', 'preta']:
-            print("[4] Fluxo de Caixa / Cobranças (Em breve)")
+            print("[4] Disparar Mensagens de Cobrança (WhatsApp)")
             
         print("[0] Sair do Sistema")
         print("=" * 40)
@@ -29,16 +30,20 @@ def exibir_menu(faixa):
             input("\nPressione Enter para continuar...")
             
         elif opcao == "2" and faixa.lower() in ['azul', 'roxa', 'marrom', 'preta']:
-            cadastrar_aluno() # Chama a função lá do outro arquivo!
+            cadastrar_aluno()
             
         elif opcao == "3" and faixa.lower() in ['azul', 'roxa', 'marrom', 'preta']:
-            listar_alunos() # Chama a função lá do outro arquivo!
+            listar_alunos()
+            
+        # 🆕 Nova opção conectada!
+        elif opcao == "4" and faixa.lower() in ['marrom', 'preta']:
+            disparar_mensagens_cobranca()
             
         elif opcao == "0":
             print("\nOss! Sistema encerrado.")
             break
         else:
-            print("\n❌ Opção inválida ou você não tem permissão (faixa) para isso!")
+            print("\n❌ Opção inválida ou você não tem permissão para isso!")
             input("\nPressione Enter para tentar novamente...")
 
 if __name__ == "__main__":
