@@ -1,0 +1,3 @@
+# Para banco de dados leve e rápido (já vem no Python, mas deixamos documentado)
+# Para uma interface moderna e bonita no futuro
+customtkinter
