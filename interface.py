@@ -20,10 +20,12 @@ class AppAcademia(ctk.CTk):
         
         self.tab_cadastro = self.tabview.add("🆕 Cadastrar Aluno")
         self.tab_financeiro = self.tabview.add("💰 Gerenciar Pagamentos")
+        self.tab_usuarios = self.tabview.add("🔒 Gestão de Acessos")
 
         # Inicializa as duas telas
         self.configurar_aba_cadastro()
         self.configurar_aba_financeiro()
+        self.configurar_aba_usuarios()
 
     # ------------------ ABA CADASTRO ------------------
     def configurar_aba_cadastro(self):
@@ -179,6 +181,52 @@ class AppAcademia(ctk.CTk):
         
         self.atualizar_lista_financeiro()
 
+    # ------------------ ABA USUÁRIOS (GESTÃO DE ACESSOS) ------------------
+    def configurar_aba_usuarios(self):
+        # Apenas usuários com faixa preta podem acessar
+        if self.faixa_usuario != "preta":
+            ctk.CTkLabel(self.tab_usuarios, text="ACESSO NEGADO", font=ctk.CTkFont(size=18, weight="bold"), text_color="red").pack(expand=True)
+            return
+
+        frame = ctk.CTkFrame(self.tab_usuarios)
+        frame.pack(padx=20, pady=20, fill="both", expand=True)
+
+        ctk.CTkLabel(frame, text="Cadastrar Novo Usuário", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=(0, 10))
+
+        ctk.CTkLabel(frame, text="Username:").pack(anchor="w")
+        self.entry_novo_username = ctk.CTkEntry(frame, width=540)
+        self.entry_novo_username.pack(pady=(0, 10))
+
+        ctk.CTkLabel(frame, text="Senha:").pack(anchor="w")
+        self.entry_novo_senha = ctk.CTkEntry(frame, width=540, show="*")
+        self.entry_novo_senha.pack(pady=(0, 10))
+
+        ctk.CTkLabel(frame, text="Permissão (Faixa):").pack(anchor="w")
+        self.combobox_nova_faixa = ctk.CTkComboBox(frame, values=["Branca", "Azul", "Roxa", "Marrom", "Preta"], width=540)
+        self.combobox_nova_faixa.pack(pady=(0, 10))
+
+        def cadastrar_usuario_callback():
+            username = self.entry_novo_username.get().strip().lower()
+            senha = self.entry_novo_senha.get().strip()
+            faixa = self.combobox_nova_faixa.get().strip().lower()
+
+            if not username or not senha or not faixa:
+                self.label_status_usuarios.configure(text="❌ Preencha todos os campos.", text_color="red")
+                return
+
+            sucesso, msg = banco.cadastrar_usuario(username, senha, faixa)
+            self.label_status_usuarios.configure(text=msg, text_color="green" if sucesso else "red")
+            if sucesso:
+                self.entry_novo_username.delete(0, 'end')
+                self.entry_novo_senha.delete(0, 'end')
+                self.combobox_nova_faixa.set("")
+
+        self.btn_cadastrar_usuario = ctk.CTkButton(frame, text="Cadastrar Usuário", command=cadastrar_usuario_callback, width=220)
+        self.btn_cadastrar_usuario.pack(pady=10)
+
+        self.label_status_usuarios = ctk.CTkLabel(frame, text="", text_color="green")
+        self.label_status_usuarios.pack(pady=5)
+
     def atualizar_lista_financeiro(self):
         if self.faixa_usuario not in ['marrom', 'preta']: return
         
@@ -218,6 +266,59 @@ class AppAcademia(ctk.CTk):
         banco.atualizar_status_pagamento(aluno_id, novo_status)
         self.atualizar_lista_financeiro() # Recarrega a tela na hora!
 
-if __name__ == "__main__":
-    app = AppAcademia(faixa_usuario_logado="preta")
+class TelaLogin(ctk.CTk):
+    def __init__(self):
+        super().__init__()
+        
+        self.title("🥋 Login - Rafael Farias BJJ")
+        self.geometry("400x450")
+        self.resizable(False, False)
+
+        # As credenciais são validadas diretamente pelo módulo de banco (`banco.validar_login`)
+
+        # --- DESIGN DA TELA ---
+        ctk.CTkLabel(
+    self, 
+    text="SISTEMA DE GESTÃO\n🥋 RAFAEL FARIAS BJJ", 
+    font=ctk.CTkFont(size=22, weight="bold")
+).pack(pady=(40, 10))
+        ctk.CTkLabel(self, text="Insira suas credenciais para continuar").pack(pady=(0, 30))
+
+        self.entry_usuario = ctk.CTkEntry(self, placeholder_text="Usuário", width=250, height=40)
+        self.entry_usuario.pack(pady=10)
+
+        # O parâmetro show="*" esconde a senha enquanto digita!
+        self.entry_senha = ctk.CTkEntry(self, placeholder_text="Senha", show="*", width=250, height=40)
+        self.entry_senha.pack(pady=10)
+
+        self.btn_login = ctk.CTkButton(self, text="Entrar", command=self.fazer_login, width=250, height=40)
+        self.btn_login.pack(pady=20)
+
+        self.label_status = ctk.CTkLabel(self, text="", text_color="red")
+        self.label_status.pack(pady=10)
+
+        self.bind('<Return>', self.fazer_login)  # Permite pressionar Enter para fazer login
+
+    def fazer_login(self, event=None):
+        # Pega o que foi digitado, tira os espaços em branco e deixa tudo minúsculo
+        usuario_digitado = self.entry_usuario.get().strip().lower()
+        senha_digitada = self.entry_senha.get().strip()
+        # Validação usando o banco de dados real
+        faixa_banco = banco.validar_login(usuario_digitado, senha_digitada)
+        if faixa_banco:
+            print(f"✅ Acesso liberado! Iniciando sistema como Faixa {faixa_banco.upper()}...")
+            self.destroy()
+            iniciar_sistema(faixa_banco)
+        else:
+            self.label_status.configure(text="❌ Usuário ou senha incorretos.")
+            self.entry_senha.delete(0, 'end')
+
+def iniciar_sistema(faixa):
+    app = AppAcademia(faixa_usuario_logado=faixa)
     app.mainloop()
+
+if __name__ == "__main__":
+    banco.criar_tabelas()
+    
+    login = TelaLogin()
+    login.mainloop()

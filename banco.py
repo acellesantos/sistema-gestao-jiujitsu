@@ -1,14 +1,13 @@
 import sqlite3
 
 def conectar():
-    # Conecta ao arquivo de banco de dados (se não existir, ele cria na hora)
     return sqlite3.connect("academia_jiujitsu.db")
 
 def criar_tabelas():
     conn = conectar()
     cursor = conn.cursor()
     
-    # Criando a tabela de alunos com todos os campos que mapeamos
+    # 1. Tabela de Alunos (A que já tínhamos)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS alunos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26,9 +25,26 @@ def criar_tabelas():
         telefone_responsavel TEXT
     )
     """)
+
+    # 2. NOVA Tabela de Usuários do Sistema
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS usuarios (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE NOT NULL,
+        senha TEXT NOT NULL,
+        faixa TEXT NOT NULL
+    )
+    """)
+
+    # 3. Cria um usuário Mestre padrão se a tabela estiver vazia (Para você não perder o acesso!)
+    cursor.execute("SELECT COUNT(*) FROM usuarios")
+    if cursor.fetchone()[0] == 0:
+        cursor.execute("INSERT INTO usuarios (username, senha, faixa) VALUES ('marcelle', 'admin', 'preta')")
+
     conn.commit()
     conn.close()
 
+# --- FUNÇÕES DE ALUNOS ---
 def salvar_aluno(dados):
     conn = conectar()
     cursor = conn.cursor()
@@ -60,3 +76,24 @@ def atualizar_status_pagamento(aluno_id, novo_status):
     cursor.execute("UPDATE alunos SET status_pagamento = ? WHERE id = ?", (novo_status, aluno_id))
     conn.commit()
     conn.close()
+
+# --- NOVAS FUNÇÕES DE USUÁRIOS (LOGIN E CADASTRO) ---
+def validar_login(username, senha):
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("SELECT faixa FROM usuarios WHERE username = ? AND senha = ?", (username, senha))
+    resultado = cursor.fetchone()
+    conn.close()
+    return resultado[0] if resultado else None
+
+def cadastrar_usuario(username, senha, faixa):
+    conn = conectar()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("INSERT INTO usuarios (username, senha, faixa) VALUES (?, ?, ?)", (username, senha, faixa))
+        conn.commit()
+        return True, f"✅ Usuário '{username}' cadastrado com sucesso!"
+    except sqlite3.IntegrityError:
+        return False, "❌ Erro: Esse nome de usuário já existe."
+    finally:
+        conn.close()
