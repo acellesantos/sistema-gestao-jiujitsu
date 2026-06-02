@@ -2,6 +2,12 @@ import customtkinter as ctk
 from datetime import datetime
 import banco  # Importa nosso arquivo de banco de dados
 import tela_alunos
+import tela_usuarios
+
+# Cores da Identidade Visual Rafael Farias BJJ
+COR_PRIMARIA = "#CC0000"  # O Vermelho vivo da sua logo
+COR_SECUNDARIA = "#000000" # O Preto forte
+COR_FUNDO = "#1A1A1A"      # Um cinza muito escuro (mais profissional que o cinza claro)
 
 ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
@@ -9,6 +15,11 @@ ctk.set_default_color_theme("blue")
 class AppAcademia(ctk.CTk):
     def __init__(self):
         super().__init__()
+
+        # Configuração de Aparência
+        ctk.set_appearance_mode("Dark")
+        ctk.set_default_color_theme("blue") # Podemos manter o azul básico ou criar tema customizado
+
         # As tabelas do banco serão criadas antes de instanciar a aplicação
         self.faixa_usuario = ""
 
@@ -17,6 +28,9 @@ class AppAcademia(ctk.CTk):
 
         # Inicia a janela em tela cheia
         self.state("zoomed")
+
+        # Aplica a cor de fundo da marca em todo o sistema
+        self.configure(fg_color=COR_FUNDO)
 
         # Espaços reservados para a interface principal (serão criados após login)
         self.tabview = None
@@ -390,8 +404,8 @@ class AppAcademia(ctk.CTk):
         self.atualizar_lista_financeiro() # Recarrega a tela na hora!
     # ------------------ LOGIN (INTEGRADO NA MESMA JANELA) ------------------
     def mostrar_login(self):
-        # Frame centralizado para login
-        self.frame_login = ctk.CTkFrame(self, width=400, height=450)
+        # Frame centralizado para login com cores da marca
+        self.frame_login = ctk.CTkFrame(self, width=400, height=450, fg_color=COR_FUNDO, border_color=COR_PRIMARIA, border_width=2)
         self.frame_login.place(relx=0.5, rely=0.5, anchor="center")
 
         self.header_login = ctk.CTkLabel(
@@ -427,7 +441,7 @@ class AppAcademia(ctk.CTk):
         self.entry_senha_login = ctk.CTkEntry(self.frame_login, placeholder_text="Senha", show="*", width=300, height=40)
         self.entry_senha_login.pack(pady=10)
 
-        self.btn_login_login = ctk.CTkButton(self.frame_login, text="Entrar", command=self.fazer_login, width=300, height=40)
+        self.btn_login_login = ctk.CTkButton(self.frame_login, text="Entrar", command=self.fazer_login, width=300, height=40, fg_color=COR_PRIMARIA, hover_color="#990000", text_color="white")
         self.btn_login_login.pack(pady=20)
 
         self.label_status_login = ctk.CTkLabel(self.frame_login, text="", text_color="red")
@@ -459,26 +473,26 @@ class AppAcademia(ctk.CTk):
         self.faixa_usuario = faixa_logada.lower()
 
         # --- 1. BARRA SUPERIOR (HEADER) ---
-        self.header_frame = ctk.CTkFrame(self, height=50, corner_radius=0)
+        self.header_frame = ctk.CTkFrame(self, height=50, corner_radius=0, fg_color=COR_FUNDO, border_color=COR_PRIMARIA, border_width=0)
         self.header_frame.pack(side="top", fill="x")
 
         # Menus (Esquerda)
         frame_menus = ctk.CTkFrame(self.header_frame, fg_color="transparent")
         frame_menus.pack(side="left", padx=10, pady=5)
 
-       # Botões do Menu Estilo ERP (Agora com cor no texto e nas bordas)
-        ctk.CTkButton(frame_menus, text="Início (Intranet)", fg_color="transparent", text_color="black", border_color="#4CAF50", border_width=1, width=100).pack(side="left", padx=2)
+       # Botões do Menu Estilo ERP com paleta Rafael Farias BJJ
+        ctk.CTkButton(frame_menus, text="Início (Intranet)", fg_color=COR_PRIMARIA, text_color="white", border_color=COR_PRIMARIA, border_width=1, width=100, hover_color="#990000").pack(side="left", padx=2)
         
-        # Menu Suspenso de Cadastros
+        # Menu Suspenso de Cadastros com cores da marca
         self.menu_cadastros = ctk.CTkOptionMenu(
             frame_menus,
             values=["Alunos", "Usuários (Acessos)", "Professores", "Turmas e Horários", "Planos de Mensalidade", "Loja (Kimonos e Faixas)"],
             command=self.navegar_cadastro,
-            fg_color="#333333",
-            button_color="#4CAF50",
-            button_hover_color="#45a049",
-            dropdown_fg_color="#2b2b2b",
-            dropdown_hover_color="#4CAF50",
+            fg_color=COR_FUNDO,
+            button_color=COR_PRIMARIA,
+            button_hover_color="#990000",
+            dropdown_fg_color=COR_FUNDO,
+            dropdown_hover_color=COR_PRIMARIA,
             dropdown_text_color="white",
             text_color="white",
             width=150
@@ -486,10 +500,10 @@ class AppAcademia(ctk.CTk):
         self.menu_cadastros.set("Cadastros") # Mantém o título fixo na barra
         self.menu_cadastros.pack(side="left", padx=2)
         
-        ctk.CTkButton(frame_menus, text="Financeiro", fg_color="transparent", text_color="black", border_color="#555555", border_width=1, width=100).pack(side="left", padx=2)
+        ctk.CTkButton(frame_menus, text="Financeiro", fg_color=COR_PRIMARIA, text_color="white", border_color=COR_PRIMARIA, border_width=1, width=100, hover_color="#990000").pack(side="left", padx=2)
         
         # O botão de Sair foi movido para o Menu
-        ctk.CTkButton(frame_menus, text="🚪 Sair (F10)", fg_color="#C62828", hover_color="#b71c1c", width=80, command=self.fazer_logoff).pack(side="left", padx=20)
+        ctk.CTkButton(frame_menus, text="🚪 Sair (F10)", fg_color=COR_PRIMARIA, hover_color="#990000", text_color="white", width=80, command=self.fazer_logoff).pack(side="left", padx=20)
         self.bind('<F10>', self.fazer_logoff)
 
         # Usuário e Relógio (Direita)
@@ -502,14 +516,14 @@ class AppAcademia(ctk.CTk):
         self.label_usuario = ctk.CTkLabel(frame_info, text=f"👤 {nome_exibicao} ({faixa_logada.title()})", font=ctk.CTkFont(size=12, weight="bold"))
         self.label_usuario.pack(side="top", anchor="e")
 
-        self.label_relogio = ctk.CTkLabel(frame_info, text="", font=ctk.CTkFont(size=16, weight="bold"), text_color="#4CAF50")
+        self.label_relogio = ctk.CTkLabel(frame_info, text="", font=ctk.CTkFont(size=16, weight="bold"), text_color=COR_PRIMARIA)
         self.label_relogio.pack(side="bottom", anchor="e")
 
         # Inicia o motorzinho do relógio
         self.atualizar_relogio()
 
         # --- 2. ÁREA PRINCIPAL (A FUTURA INTRANET) ---
-        self.area_trabalho = ctk.CTkFrame(self, fg_color="transparent")
+        self.area_trabalho = ctk.CTkFrame(self, fg_color=COR_FUNDO)
         self.area_trabalho.pack(side="top", fill="both", expand=True, padx=20, pady=20)
 
         # Letreiros provisórios da Intranet
@@ -517,12 +531,13 @@ class AppAcademia(ctk.CTk):
             self.area_trabalho, 
             text="🥋 Bem-vindo à Intranet do Rafael Farias BJJ", 
             font=ctk.CTkFont(size=28, weight="bold"),
-            text_color="#4CAF50"
+            text_color=COR_PRIMARIA
         ).pack(pady=(40, 10))
         
         ctk.CTkLabel(
             self.area_trabalho, 
-            text="Sua plataforma de avisos, campeonatos e integração da equipe."
+            text="Sua plataforma de avisos, campeonatos e integração da equipe.",
+            text_color="white"
         ).pack()
 
     def navegar_cadastro(self, opcao_selecionada):
@@ -545,86 +560,14 @@ class AppAcademia(ctk.CTk):
             ctk.CTkLabel(self.area_trabalho, text=f"🚧 Módulo em Construção: {opcao_selecionada}", font=ctk.CTkFont(size=24, weight="bold"), text_color="orange").pack(pady=50)
 
     def renderizar_tela_usuarios(self):
-        # 🛑 TRAVA DE SEGURANÇA: Só o Faixa Preta vê essa tela!
+        # 🛑 TRAVA DE SEGURANÇA
         if self.faixa_usuario != "preta":
-            ctk.CTkLabel(self.area_trabalho, text="❌ ACESSO NEGADO", font=ctk.CTkFont(size=30, weight="bold"), text_color="red").pack(pady=(100, 10))
-            ctk.CTkLabel(self.area_trabalho, text="Apenas usuários Faixa Preta podem gerenciar acessos.", font=ctk.CTkFont(size=16)).pack()
+            # (Mantém a lógica de acesso negado aqui)
             return
-
-        # --- DIVISÃO DA TELA (Esquerda = Lista | Direita = Form) ---
-        frame_esquerda = ctk.CTkFrame(self.area_trabalho, width=350, fg_color="transparent")
-        frame_esquerda.pack(side="left", fill="y", padx=20, pady=10)
-        
-        frame_direita = ctk.CTkFrame(self.area_trabalho, fg_color="transparent")
-        frame_direita.pack(side="right", fill="both", expand=True, padx=20, pady=10)
-
-        # ----------------- LADO ESQUERDO (LISTA) -----------------
-        ctk.CTkLabel(frame_esquerda, text="👥 Equipe Cadastrada", font=ctk.CTkFont(size=18, weight="bold")).pack(pady=10)
-        
-        lista_scroll = ctk.CTkScrollableFrame(frame_esquerda, width=300)
-        lista_scroll.pack(fill="both", expand=True)
-
-        # ----------------- LADO DIREITO (FORMULÁRIO) -----------------
-        ctk.CTkLabel(frame_direita, text="📝 Novo Usuário", font=ctk.CTkFont(size=18, weight="bold")).pack(pady=10)
-        
-        entry_user = ctk.CTkEntry(frame_direita, placeholder_text="Username (Ex: prof_rafael)", width=350)
-        entry_user.pack(pady=10)
-        
-        entry_senha = ctk.CTkEntry(frame_direita, placeholder_text="Senha de Acesso", width=350)
-        entry_senha.pack(pady=10)
-        
-        ctk.CTkLabel(frame_direita, text="Permissão de Acesso:").pack(pady=(10, 0))
-        combo_faixa = ctk.CTkOptionMenu(frame_direita, values=["Branca", "Azul", "Roxa", "Marrom", "Preta"], width=350)
-        combo_faixa.pack(pady=5)
-        
-        label_status = ctk.CTkLabel(frame_direita, text="", font=ctk.CTkFont(weight="bold"))
-        label_status.pack(pady=10)
-
-        # --- FUNÇÕES DE AÇÃO DA TELA ---
-        def recarregar_lista():
-            # Limpa tudo que estava na tela antes
-            for widget in lista_scroll.winfo_children():
-                widget.destroy()
-                
-            # Puxa do banco.py as informações fresquinhas
-            for u in banco.listar_usuarios():
-                id_user, nome, faixa = u
-                linha = ctk.CTkFrame(lista_scroll, fg_color="#333333")
-                linha.pack(fill="x", pady=4, padx=4)
-                
-                # Nome do usuário branco para não dar problema de contraste!
-                ctk.CTkLabel(linha, text=f"👤 {nome} ({faixa.title()})", text_color="white").pack(side="left", padx=10, pady=10)
-                
-                # Se não for você (marcelle), exibe o botão de deletar
-                if nome != "marcelle":
-                    btn_excluir = ctk.CTkButton(linha, text="Excluir", width=60, fg_color="#C62828", hover_color="#b71c1c", 
-                                                command=lambda i=id_user: deletar(i))
-                    btn_excluir.pack(side="right", padx=5, pady=5)
-
-        def deletar(id_user):
-            banco.deletar_usuario(id_user)
-            recarregar_lista() # Atualiza a lista na hora
-
-        def salvar():
-            user = entry_user.get().strip().lower()
-            senha = entry_senha.get().strip()
-            faixa = combo_faixa.get().lower()
             
-            if user and senha:
-                sucesso, msg = banco.cadastrar_usuario(user, senha, faixa)
-                label_status.configure(text=msg, text_color="#4CAF50" if sucesso else "red")
-                if sucesso:
-                    entry_user.delete(0, 'end')
-                    entry_senha.delete(0, 'end')
-                    recarregar_lista()
-            else:
-                label_status.configure(text="❌ Preencha o usuário e a senha!", text_color="red")
-
-        ctk.CTkButton(frame_direita, text="Cadastrar Usuário", command=salvar, width=350, fg_color="#4CAF50", hover_color="#45a049").pack(pady=20)
+        tela = tela_usuarios.TelaUsuarios(self.area_trabalho, self.usuario_logado, self.faixa_usuario)
+        tela.pack(fill="both", expand=True)
         
-        # Chama a função uma vez para desenhar a lista quando a tela abrir
-        recarregar_lista()
-
     def renderizar_tela_alunos(self):
         # Instancia a classe do módulo externo e "cola" ela dentro da área de trabalho
         tela = tela_alunos.TelaAlunos(self.area_trabalho)
@@ -650,6 +593,10 @@ class AppAcademia(ctk.CTk):
         except Exception:
             pass
         try:
+            self.area_trabalho.destroy()
+        except Exception:
+            pass
+        try:
             self.tabview.destroy()
         except Exception:
             pass
@@ -664,7 +611,7 @@ class AppAcademia(ctk.CTk):
         except Exception:
             pass
 
-        print("🚪 Sessão encerrada. Retornando ao login...")
+        print("🚪 sessão encerrada. Retornando ao login...")
         # Mostra o login novamente
         self.mostrar_login()
 
