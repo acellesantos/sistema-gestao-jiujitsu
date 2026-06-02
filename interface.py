@@ -6,26 +6,25 @@ ctk.set_appearance_mode("System")
 ctk.set_default_color_theme("blue")
 
 class AppAcademia(ctk.CTk):
-    def __init__(self, faixa_usuario_logado="preta"):
+    def __init__(self):
         super().__init__()
-        banco.criar_tabelas()
-        self.faixa_usuario = faixa_usuario_logado.lower()
+        # As tabelas do banco serão criadas antes de instanciar a aplicação
+        self.faixa_usuario = ""
+
         self.title("🥋 Sistema Jiu-Jitsu - Gestão & LGPD")
-        self.geometry("700x750")
-        self.resizable(False, False)
+        self.geometry("1000x600")
 
-        # Criando abas no sistema (Uma para cadastro, outra para financeiro)
-        self.tabview = ctk.CTkTabview(self, width=680, height=720)
-        self.tabview.pack(padx=10, pady=10)
-        
-        self.tab_cadastro = self.tabview.add("🆕 Cadastrar Aluno")
-        self.tab_financeiro = self.tabview.add("💰 Gerenciar Pagamentos")
-        self.tab_usuarios = self.tabview.add("🔒 Gestão de Acessos")
+        # Inicia a janela em tela cheia
+        self.state("zoomed")
 
-        # Inicializa as duas telas
-        self.configurar_aba_cadastro()
-        self.configurar_aba_financeiro()
-        self.configurar_aba_usuarios()
+        # Espaços reservados para a interface principal (serão criados após login)
+        self.tabview = None
+        self.tab_cadastro = None
+        self.tab_financeiro = None
+        self.tab_usuarios = None
+
+        # Mostrar tela de login integrada
+        self.mostrar_login()
 
     # ------------------ ABA CADASTRO ------------------
     def configurar_aba_cadastro(self):
@@ -265,60 +264,103 @@ class AppAcademia(ctk.CTk):
         novo_status = "Atrasado" if status_atual == "Em dia" else "Em dia"
         banco.atualizar_status_pagamento(aluno_id, novo_status)
         self.atualizar_lista_financeiro() # Recarrega a tela na hora!
+    # ------------------ LOGIN (INTEGRADO NA MESMA JANELA) ------------------
+    def mostrar_login(self):
+        # Frame centralizado para login
+        self.frame_login = ctk.CTkFrame(self, width=420, height=380)
+        self.frame_login.place(relx=0.5, rely=0.5, anchor="center")
 
-class TelaLogin(ctk.CTk):
-    def __init__(self):
-        super().__init__()
-        
-        self.title("🥋 Login - Rafael Farias BJJ")
-        self.geometry("400x450")
-        self.resizable(False, False)
+        ctk.CTkLabel(self.frame_login, text="SISTEMA DE GESTÃO\n🥋 RAFAEL FARIAS BJJ", font=ctk.CTkFont(size=22, weight="bold")).pack(pady=(20, 10))
+        ctk.CTkLabel(self.frame_login, text="Insira suas credenciais para continuar").pack(pady=(0, 20))
 
-        # As credenciais são validadas diretamente pelo módulo de banco (`banco.validar_login`)
+        self.entry_usuario_login = ctk.CTkEntry(self.frame_login, placeholder_text="Usuário", width=300, height=40)
+        self.entry_usuario_login.pack(pady=8)
 
-        # --- DESIGN DA TELA ---
-        ctk.CTkLabel(
-    self, 
-    text="SISTEMA DE GESTÃO\n🥋 RAFAEL FARIAS BJJ", 
-    font=ctk.CTkFont(size=22, weight="bold")
-).pack(pady=(40, 10))
-        ctk.CTkLabel(self, text="Insira suas credenciais para continuar").pack(pady=(0, 30))
+        self.entry_senha_login = ctk.CTkEntry(self.frame_login, placeholder_text="Senha", show="*", width=300, height=40)
+        self.entry_senha_login.pack(pady=8)
 
-        self.entry_usuario = ctk.CTkEntry(self, placeholder_text="Usuário", width=250, height=40)
-        self.entry_usuario.pack(pady=10)
+        self.btn_login_login = ctk.CTkButton(self.frame_login, text="Entrar", command=self.fazer_login, width=300, height=40)
+        self.btn_login_login.pack(pady=16)
 
-        # O parâmetro show="*" esconde a senha enquanto digita!
-        self.entry_senha = ctk.CTkEntry(self, placeholder_text="Senha", show="*", width=250, height=40)
-        self.entry_senha.pack(pady=10)
+        self.label_status_login = ctk.CTkLabel(self.frame_login, text="", text_color="red")
+        self.label_status_login.pack(pady=4)
 
-        self.btn_login = ctk.CTkButton(self, text="Entrar", command=self.fazer_login, width=250, height=40)
-        self.btn_login.pack(pady=20)
-
-        self.label_status = ctk.CTkLabel(self, text="", text_color="red")
-        self.label_status.pack(pady=10)
-
-        self.bind('<Return>', self.fazer_login)  # Permite pressionar Enter para fazer login
+        # Bind Enter para submeter o login
+        self.bind('<Return>', self.fazer_login)
 
     def fazer_login(self, event=None):
-        # Pega o que foi digitado, tira os espaços em branco e deixa tudo minúsculo
-        usuario_digitado = self.entry_usuario.get().strip().lower()
-        senha_digitada = self.entry_senha.get().strip()
-        # Validação usando o banco de dados real
+        usuario_digitado = self.entry_usuario_login.get().strip().lower()
+        senha_digitada = self.entry_senha_login.get().strip()
+
         faixa_banco = banco.validar_login(usuario_digitado, senha_digitada)
         if faixa_banco:
             print(f"✅ Acesso liberado! Iniciando sistema como Faixa {faixa_banco.upper()}...")
-            self.destroy()
-            iniciar_sistema(faixa_banco)
+            # Remove apenas o frame de login e mostra o sistema principal
+            try:
+                self.frame_login.destroy()
+            except Exception:
+                pass
+            self.mostrar_sistema_principal(faixa_banco)
         else:
-            self.label_status.configure(text="❌ Usuário ou senha incorretos.")
-            self.entry_senha.delete(0, 'end')
+            self.label_status_login.configure(text="❌ Usuário ou senha incorretos.")
+            self.entry_senha_login.delete(0, 'end')
 
-def iniciar_sistema(faixa):
-    app = AppAcademia(faixa_usuario_logado=faixa)
-    app.mainloop()
+    def mostrar_sistema_principal(self, faixa):
+        # Define a faixa do usuário logado e cria as abas do sistema
+        self.faixa_usuario = faixa.lower()
+
+        # Frame de cabeçalho com botão de logoff
+        self.header_frame = ctk.CTkFrame(self, fg_color="transparent")
+        self.header_frame.pack(fill="x", padx=10, pady=(10, 0))
+
+        # Botão de logoff no topo direito
+        self.btn_logoff = ctk.CTkButton(self.header_frame, text="🚪 Sair (F10)", command=self.fazer_logoff, width=150, height=30)
+        self.btn_logoff.pack(side="right", padx=5)
+
+        # Criando abas no sistema (Uma para cadastro, outra para financeiro)
+        self.tabview = ctk.CTkTabview(self, width=680, height=720)
+        self.tabview.pack(padx=10, pady=10, fill='both', expand=True)
+        
+        self.tab_cadastro = self.tabview.add("🆕 Cadastrar Aluno")
+        self.tab_financeiro = self.tabview.add("💰 Gerenciar Pagamentos")
+        self.tab_usuarios = self.tabview.add("🔒 Gestão de Acessos")
+
+        # Inicializa as telas internas
+        self.configurar_aba_cadastro()
+        self.configurar_aba_financeiro()
+        self.configurar_aba_usuarios()
+
+        # Atalho de teclado F10 para logoff
+        self.bind('<F10>', self.fazer_logoff)
+
+    # ------------------ LOGOFF (SAIR DA SESSÃO) ------------------
+    def fazer_logoff(self, event=None):
+        # Destrói os widgets de sistema principal
+        try:
+            self.header_frame.destroy()
+        except Exception:
+            pass
+        try:
+            self.tabview.destroy()
+        except Exception:
+            pass
+        try:
+            self.btn_logoff.destroy()
+        except Exception:
+            pass
+
+        # Remove o atalho F10
+        try:
+            self.unbind('<F10>')
+        except Exception:
+            pass
+
+        print("🚪 Sessão encerrada. Retornando ao login...")
+        # Mostra o login novamente
+        self.mostrar_login()
+
 
 if __name__ == "__main__":
     banco.criar_tabelas()
-    
-    login = TelaLogin()
-    login.mainloop()
+    app = AppAcademia()
+    app.mainloop()
