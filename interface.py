@@ -187,44 +187,167 @@ class AppAcademia(ctk.CTk):
             ctk.CTkLabel(self.tab_usuarios, text="ACESSO NEGADO", font=ctk.CTkFont(size=18, weight="bold"), text_color="red").pack(expand=True)
             return
 
-        frame = ctk.CTkFrame(self.tab_usuarios)
-        frame.pack(padx=20, pady=20, fill="both", expand=True)
+        # Variável de controle para edição
+        self.usuario_em_edicao_id = None
 
-        ctk.CTkLabel(frame, text="Cadastrar Novo Usuário", font=ctk.CTkFont(size=16, weight="bold")).pack(pady=(0, 10))
+        # Frame principal dividido em duas colunas
+        main_frame = ctk.CTkFrame(self.tab_usuarios)
+        main_frame.pack(padx=10, pady=10, fill="both", expand=True)
 
-        ctk.CTkLabel(frame, text="Username:").pack(anchor="w")
-        self.entry_novo_username = ctk.CTkEntry(frame, width=540)
-        self.entry_novo_username.pack(pady=(0, 10))
+        # ====== COLUNA ESQUERDA: LISTA DE USUÁRIOS ======
+        left_frame = ctk.CTkFrame(main_frame)
+        left_frame.pack(side="left", fill="both", expand=True, padx=(0, 10))
 
-        ctk.CTkLabel(frame, text="Senha:").pack(anchor="w")
-        self.entry_novo_senha = ctk.CTkEntry(frame, width=540, show="*")
-        self.entry_novo_senha.pack(pady=(0, 10))
+        ctk.CTkLabel(left_frame, text="👥 Usuários do Sistema", font=ctk.CTkFont(size=14, weight="bold")).pack(pady=10)
 
-        ctk.CTkLabel(frame, text="Permissão (Faixa):").pack(anchor="w")
-        self.combobox_nova_faixa = ctk.CTkComboBox(frame, values=["Branca", "Azul", "Roxa", "Marrom", "Preta"], width=540)
-        self.combobox_nova_faixa.pack(pady=(0, 10))
+        self.frame_lista_usuarios = ctk.CTkScrollableFrame(left_frame, width=300, height=500)
+        self.frame_lista_usuarios.pack(fill="both", expand=True, padx=5, pady=5)
 
-        def cadastrar_usuario_callback():
+        # ====== COLUNA DIREITA: FORMULÁRIO ======
+        right_frame = ctk.CTkFrame(main_frame)
+        right_frame.pack(side="right", fill="both", expand=True, padx=(10, 0))
+
+        ctk.CTkLabel(right_frame, text="📝 Novo Usuário", font=ctk.CTkFont(size=14, weight="bold")).pack(pady=10)
+
+        ctk.CTkLabel(right_frame, text="Username:").pack(anchor="w", padx=20, pady=(10, 0))
+        self.entry_novo_username = ctk.CTkEntry(right_frame, width=300)
+        self.entry_novo_username.pack(padx=20, pady=(0, 10))
+
+        ctk.CTkLabel(right_frame, text="Senha (deixe em branco para manter):").pack(anchor="w", padx=20, pady=(10, 0))
+        self.entry_novo_senha = ctk.CTkEntry(right_frame, width=300, show="*")
+        self.entry_novo_senha.pack(padx=20, pady=(0, 10))
+
+        ctk.CTkLabel(right_frame, text="Permissão (Faixa):").pack(anchor="w", padx=20, pady=(10, 0))
+        self.combobox_nova_faixa = ctk.CTkComboBox(right_frame, values=["Branca", "Azul", "Roxa", "Marrom", "Preta"], width=300)
+        self.combobox_nova_faixa.pack(padx=20, pady=(0, 10))
+
+        # Frame para botões de ação
+        btn_frame = ctk.CTkFrame(right_frame)
+        btn_frame.pack(padx=20, pady=15, fill="x")
+
+        def limpar_formulario():
+            self.usuario_em_edicao_id = None
+            self.entry_novo_username.delete(0, 'end')
+            self.entry_novo_senha.delete(0, 'end')
+            self.combobox_nova_faixa.set("")
+            self.label_status_usuarios.configure(text="")
+            ctk.CTkLabel(right_frame, text="📝 Novo Usuário", font=ctk.CTkFont(size=14, weight="bold")).pack_forget()
+            right_frame.pack_configure()
+
+        def salvar_usuario():
             username = self.entry_novo_username.get().strip().lower()
             senha = self.entry_novo_senha.get().strip()
             faixa = self.combobox_nova_faixa.get().strip().lower()
 
-            if not username or not senha or not faixa:
-                self.label_status_usuarios.configure(text="❌ Preencha todos os campos.", text_color="red")
+            if not username or not faixa:
+                self.label_status_usuarios.configure(text="❌ Preencha username e permissão.", text_color="red")
                 return
 
-            sucesso, msg = banco.cadastrar_usuario(username, senha, faixa)
+            # Se está editando e não mudou a senha, passa vazio
+            if self.usuario_em_edicao_id is not None:
+                # MODO EDIÇÃO
+                sucesso, msg = banco.atualizar_usuario(self.usuario_em_edicao_id, username, senha, faixa)
+            else:
+                # MODO CRIAÇÃO
+                if not senha:
+                    self.label_status_usuarios.configure(text="❌ Senha obrigatória para novo usuário.", text_color="red")
+                    return
+                sucesso, msg = banco.cadastrar_usuario(username, senha, faixa)
+
             self.label_status_usuarios.configure(text=msg, text_color="green" if sucesso else "red")
             if sucesso:
-                self.entry_novo_username.delete(0, 'end')
-                self.entry_novo_senha.delete(0, 'end')
-                self.combobox_nova_faixa.set("")
+                limpar_formulario()
+                self.atualizar_lista_usuarios()
 
-        self.btn_cadastrar_usuario = ctk.CTkButton(frame, text="Cadastrar Usuário", command=cadastrar_usuario_callback, width=220)
-        self.btn_cadastrar_usuario.pack(pady=10)
+        def editar_usuario_callback(user_id, username, faixa):
+            self.usuario_em_edicao_id = user_id
+            self.entry_novo_username.delete(0, 'end')
+            self.entry_novo_username.insert(0, username)
+            self.entry_novo_senha.delete(0, 'end')
+            self.combobox_nova_faixa.set(faixa.capitalize())
+            self.label_status_usuarios.configure(text="")
 
-        self.label_status_usuarios = ctk.CTkLabel(frame, text="", text_color="green")
+        def deletar_usuario_callback(user_id, username):
+            if username.lower() == "marcelle":
+                self.label_status_usuarios.configure(text="❌ Usuário 'marcelle' não pode ser excluído!", text_color="red")
+                return
+            banco.deletar_usuario(user_id)
+            self.label_status_usuarios.configure(text=f"✅ Usuário '{username}' excluído com sucesso!", text_color="green")
+            self.atualizar_lista_usuarios()
+
+        # Botão Salvar/Cadastrar
+        self.btn_cadastrar_usuario = ctk.CTkButton(
+            btn_frame, text="Cadastrar Usuário", command=salvar_usuario, width=140
+        )
+        self.btn_cadastrar_usuario.pack(side="left", padx=5)
+
+        # Botão Cancelar Edição
+        self.btn_cancelar_edicao = ctk.CTkButton(
+            btn_frame, text="Cancelar", command=limpar_formulario, width=140
+        )
+        self.btn_cancelar_edicao.pack(side="left", padx=5)
+
+        self.label_status_usuarios = ctk.CTkLabel(right_frame, text="", text_color="green")
         self.label_status_usuarios.pack(pady=5)
+
+        # Carrega a lista inicial de usuários
+        self.atualizar_lista_usuarios()
+
+    def atualizar_lista_usuarios(self):
+        """Recarrega a lista de usuários da esquerda."""
+        for widget in self.frame_lista_usuarios.winfo_children():
+            widget.destroy()
+
+        usuarios = banco.listar_usuarios()
+        if not usuarios:
+            ctk.CTkLabel(self.frame_lista_usuarios, text="Nenhum usuário cadastrado.").pack(pady=20)
+            return
+
+        for user_id, username, faixa in usuarios:
+            # Card para cada usuário
+            card = ctk.CTkFrame(self.frame_lista_usuarios, fg_color="#2B2B2B")
+            card.pack(fill="x", padx=5, pady=5)
+
+            # Info do usuário
+            info_text = f"👤 {username} ({faixa.capitalize()})"
+            ctk.CTkLabel(card, text=info_text, font=ctk.CTkFont(size=11), text_color="white").pack(side="left", padx=10, pady=8, anchor="w")
+
+            # Botão Editar
+            btn_editar = ctk.CTkButton(
+                card, text="✏️ Editar", width=70, height=25,
+                command=lambda uid=user_id, uname=username, ufaixa=faixa: self.preencher_formulario_edicao(uid, uname, ufaixa)
+            )
+            btn_editar.pack(side="right", padx=2, pady=4)
+
+            # Botão Excluir (protegido para 'marcelle')
+            if username.lower() == "marcelle":
+                btn_deletar = ctk.CTkButton(
+                    card, text="🔒 Master", width=70, height=25, fg_color="#666666", state="disabled"
+                )
+            else:
+                btn_deletar = ctk.CTkButton(
+                    card, text="🗑️ Excluir", width=70, height=25, fg_color="#9c2a2a",
+                    command=lambda uid=user_id, uname=username: self.deletar_usuario_aba(uid, uname)
+                )
+            btn_deletar.pack(side="right", padx=2, pady=4)
+
+    def preencher_formulario_edicao(self, user_id, username, faixa):
+        """Preenche o formulário com dados do usuário para edição."""
+        self.usuario_em_edicao_id = user_id
+        self.entry_novo_username.delete(0, 'end')
+        self.entry_novo_username.insert(0, username)
+        self.entry_novo_senha.delete(0, 'end')  # Deixa vazio para manter a senha atual
+        self.combobox_nova_faixa.set(faixa.capitalize())
+        self.label_status_usuarios.configure(text="", text_color="green")
+
+    def deletar_usuario_aba(self, user_id, username):
+        """Deleta um usuário e recarrega a lista."""
+        if username.lower() == "marcelle":
+            self.label_status_usuarios.configure(text="❌ Usuário 'marcelle' não pode ser excluído!", text_color="red")
+            return
+        banco.deletar_usuario(user_id)
+        self.label_status_usuarios.configure(text=f"✅ Usuário '{username}' excluído com sucesso!", text_color="green")
+        self.atualizar_lista_usuarios()
 
     def atualizar_lista_financeiro(self):
         if self.faixa_usuario not in ['marrom', 'preta']: return
@@ -247,7 +370,7 @@ class AppAcademia(ctk.CTk):
             card.pack(fill="x", padx=10, pady=5)
             
             info_text = f"🥋 {nome} ({faixa}) | Status: {status.upper()}"
-            ctk.CTkLabel(card, text=info_text, font=ctk.CTkFont(size=12)).pack(side="left", padx=15)
+            ctk.CTkLabel(card, text=info_text, font=ctk.CTkFont(size=12), text_color="white").pack(side="left", padx=15)
             
             # Botão dinâmico para alternar o status
             texto_btn = "Marcar Atrasado" if status == "Em dia" else "Marcar Pago"
@@ -267,23 +390,47 @@ class AppAcademia(ctk.CTk):
     # ------------------ LOGIN (INTEGRADO NA MESMA JANELA) ------------------
     def mostrar_login(self):
         # Frame centralizado para login
-        self.frame_login = ctk.CTkFrame(self, width=420, height=380)
+        self.frame_login = ctk.CTkFrame(self, width=400, height=450)
         self.frame_login.place(relx=0.5, rely=0.5, anchor="center")
 
-        ctk.CTkLabel(self.frame_login, text="SISTEMA DE GESTÃO\n🥋 RAFAEL FARIAS BJJ", font=ctk.CTkFont(size=22, weight="bold")).pack(pady=(20, 10))
+        self.header_login = ctk.CTkLabel(
+            self.frame_login, 
+            text="SISTEMA DE GESTÃO\n🥋 RAFAEL FARIAS BJJ", 
+            font=ctk.CTkFont(size=22, weight="bold"),
+            cursor="fleur" 
+        )
+        self.header_login.pack(pady=(40, 10), fill="x")
+
+        # --- 2. O MOTOR DE MOVIMENTO ---
+        def iniciar_arraste(event):
+            # Salva o ponto exato onde o mouse clicou dentro do letreiro
+            self._drag_start_x = event.x
+            self._drag_start_y = event.y
+
+        def arrastar(event):
+            # Calcula a nova posição subtraindo a posição inicial do clique
+            x = self.frame_login.winfo_x() - self._drag_start_x + event.x
+            y = self.frame_login.winfo_y() - self._drag_start_y + event.y
+            # Atualiza as coordenadas absolutas na tela cheia
+            self.frame_login.place(x=x, y=y, relx=0, rely=0, anchor="nw")
+
+        # Liga os eventos de clique e arrasto no letreiro
+        self.header_login.bind("<Button-1>", iniciar_arraste)
+        self.header_login.bind("<B1-Motion>", arrastar)
+
         ctk.CTkLabel(self.frame_login, text="Insira suas credenciais para continuar").pack(pady=(0, 20))
 
         self.entry_usuario_login = ctk.CTkEntry(self.frame_login, placeholder_text="Usuário", width=300, height=40)
-        self.entry_usuario_login.pack(pady=8)
+        self.entry_usuario_login.pack(pady=10)
 
         self.entry_senha_login = ctk.CTkEntry(self.frame_login, placeholder_text="Senha", show="*", width=300, height=40)
-        self.entry_senha_login.pack(pady=8)
+        self.entry_senha_login.pack(pady=10)
 
         self.btn_login_login = ctk.CTkButton(self.frame_login, text="Entrar", command=self.fazer_login, width=300, height=40)
-        self.btn_login_login.pack(pady=16)
+        self.btn_login_login.pack(pady=20)
 
         self.label_status_login = ctk.CTkLabel(self.frame_login, text="", text_color="red")
-        self.label_status_login.pack(pady=4)
+        self.label_status_login.pack(pady=10)
 
         # Bind Enter para submeter o login
         self.bind('<Return>', self.fazer_login)
@@ -300,38 +447,75 @@ class AppAcademia(ctk.CTk):
                 self.frame_login.destroy()
             except Exception:
                 pass
-            self.mostrar_sistema_principal(faixa_banco)
+            self.mostrar_sistema_principal(usuario_digitado, faixa_banco)
         else:
             self.label_status_login.configure(text="❌ Usuário ou senha incorretos.")
             self.entry_senha_login.delete(0, 'end')
 
-    def mostrar_sistema_principal(self, faixa):
-        # Define a faixa do usuário logado e cria as abas do sistema
-        self.faixa_usuario = faixa.lower()
+    def mostrar_sistema_principal(self, usuario_logado, faixa_logada):
+        # --- 1. BARRA SUPERIOR (HEADER) ---
+        self.header_frame = ctk.CTkFrame(self, height=50, corner_radius=0)
+        self.header_frame.pack(side="top", fill="x")
 
-        # Frame de cabeçalho com botão de logoff
-        self.header_frame = ctk.CTkFrame(self, fg_color="transparent")
-        self.header_frame.pack(fill="x", padx=10, pady=(10, 0))
+        # Menus (Esquerda)
+        frame_menus = ctk.CTkFrame(self.header_frame, fg_color="transparent")
+        frame_menus.pack(side="left", padx=10, pady=5)
 
-        # Botão de logoff no topo direito
-        self.btn_logoff = ctk.CTkButton(self.header_frame, text="🚪 Sair (F10)", command=self.fazer_logoff, width=150, height=30)
-        self.btn_logoff.pack(side="right", padx=5)
-
-        # Criando abas no sistema (Uma para cadastro, outra para financeiro)
-        self.tabview = ctk.CTkTabview(self, width=680, height=720)
-        self.tabview.pack(padx=10, pady=10, fill='both', expand=True)
+       # Botões do Menu Estilo ERP (Agora com cor no texto e nas bordas)
+        ctk.CTkButton(frame_menus, text="Início (Intranet)", fg_color="transparent", text_color="black", border_color="#4CAF50", border_width=1, width=100).pack(side="left", padx=2)
         
-        self.tab_cadastro = self.tabview.add("🆕 Cadastrar Aluno")
-        self.tab_financeiro = self.tabview.add("💰 Gerenciar Pagamentos")
-        self.tab_usuarios = self.tabview.add("🔒 Gestão de Acessos")
-
-        # Inicializa as telas internas
-        self.configurar_aba_cadastro()
-        self.configurar_aba_financeiro()
-        self.configurar_aba_usuarios()
-
-        # Atalho de teclado F10 para logoff
+        ctk.CTkButton(frame_menus, text="Cadastros", fg_color="transparent", text_color="black", border_color="#555555", border_width=1, width=100).pack(side="left", padx=2)
+        
+        ctk.CTkButton(frame_menus, text="Financeiro", fg_color="transparent", text_color="black", border_color="#555555", border_width=1, width=100).pack(side="left", padx=2)
+        
+        # O botão de Sair foi movido para o Menu
+        ctk.CTkButton(frame_menus, text="🚪 Sair (F10)", fg_color="#C62828", hover_color="#b71c1c", width=80, command=self.fazer_logoff).pack(side="left", padx=20)
         self.bind('<F10>', self.fazer_logoff)
+
+        # Usuário e Relógio (Direita)
+        frame_info = ctk.CTkFrame(self.header_frame, fg_color="transparent")
+        frame_info.pack(side="right", padx=20, pady=5)
+
+        # Se for o seu usuário, a gente joga o nome completo bonitão igual no print
+        nome_exibicao = "MARCELLE SILVA DOS SANTOS" if usuario_logado == "marcelle" else usuario_logado.upper()
+
+        self.label_usuario = ctk.CTkLabel(frame_info, text=f"👤 {nome_exibicao} ({faixa_logada.title()})", font=ctk.CTkFont(size=12, weight="bold"))
+        self.label_usuario.pack(side="top", anchor="e")
+
+        self.label_relogio = ctk.CTkLabel(frame_info, text="", font=ctk.CTkFont(size=16, weight="bold"), text_color="#4CAF50")
+        self.label_relogio.pack(side="bottom", anchor="e")
+
+        # Inicia o motorzinho do relógio
+        self.atualizar_relogio()
+
+        # --- 2. ÁREA PRINCIPAL (A FUTURA INTRANET) ---
+        self.area_trabalho = ctk.CTkFrame(self, fg_color="transparent")
+        self.area_trabalho.pack(side="top", fill="both", expand=True, padx=20, pady=20)
+
+        # Letreiros provisórios da Intranet
+        ctk.CTkLabel(
+            self.area_trabalho, 
+            text="🥋 Bem-vindo à Intranet do Rafael Farias BJJ", 
+            font=ctk.CTkFont(size=28, weight="bold"),
+            text_color="#4CAF50"
+        ).pack(pady=(40, 10))
+        
+        ctk.CTkLabel(
+            self.area_trabalho, 
+            text="Sua plataforma de avisos, campeonatos e integração da equipe."
+        ).pack()
+
+    # --- 3. O MOTOR DO RELÓGIO (Adicione logo abaixo) ---
+    def atualizar_relogio(self):
+        agora = datetime.now()
+        data_hora_formatada = agora.strftime("%d/%m/%Y  %H:%M:%S")
+        
+        try:
+            self.label_relogio.configure(text=data_hora_formatada)
+            # O sistema chama essa função de novo a cada 1000 milissegundos (1 segundo)
+            self.after(1000, self.atualizar_relogio)
+        except:
+            pass # Previne erros se o sistema for fechado
 
     # ------------------ LOGOFF (SAIR DA SESSÃO) ------------------
     def fazer_logoff(self, event=None):

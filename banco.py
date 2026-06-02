@@ -97,3 +97,35 @@ def cadastrar_usuario(username, senha, faixa):
         return False, "❌ Erro: Esse nome de usuário já existe."
     finally:
         conn.close()
+
+def listar_usuarios():
+    conn = conectar()
+    cursor = conn.cursor()
+    # Não puxamos a senha por segurança, só o ID, nome e faixa
+    cursor.execute("SELECT id, username, faixa FROM usuarios")
+    usuarios = cursor.fetchall()
+    conn.close()
+    return usuarios
+
+def atualizar_usuario(user_id, username, senha, faixa):
+    conn = conectar()
+    cursor = conn.cursor()
+    try:
+        # Se a pessoa digitou uma senha nova, atualiza tudo. Se não, mantém a senha antiga.
+        if senha.strip() != "":
+            cursor.execute("UPDATE usuarios SET username = ?, senha = ?, faixa = ? WHERE id = ?", (username, senha, faixa, user_id))
+        else:
+            cursor.execute("UPDATE usuarios SET username = ?, faixa = ? WHERE id = ?", (username, faixa, user_id))
+        conn.commit()
+        return True, f"✅ Usuário '{username}' atualizado com sucesso!"
+    except sqlite3.IntegrityError:
+        return False, "❌ Erro: Esse nome de usuário já pertence a outra pessoa."
+    finally:
+        conn.close()
+
+def deletar_usuario(user_id):
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM usuarios WHERE id = ?", (user_id,))
+    conn.commit()
+    conn.close()
