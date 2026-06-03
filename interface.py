@@ -3,6 +3,8 @@ from datetime import datetime
 import banco  # Importa nosso arquivo de banco de dados
 import tela_alunos
 import tela_usuarios
+import tela_financeiro
+import tela_turmas
 
 # Cores da Identidade Visual Rafael Farias BJJ
 COR_PRIMARIA = "#CC0000"  # O Vermelho vivo da sua logo
@@ -500,7 +502,7 @@ class AppAcademia(ctk.CTk):
         self.menu_cadastros.set("Cadastros") # Mantém o título fixo na barra
         self.menu_cadastros.pack(side="left", padx=2)
         
-        ctk.CTkButton(frame_menus, text="Financeiro", fg_color=COR_PRIMARIA, text_color="white", border_color=COR_PRIMARIA, border_width=1, width=100, hover_color="#990000").pack(side="left", padx=2)
+        ctk.CTkButton(frame_menus, text="Financeiro", command=self.renderizar_tela_financeiro, fg_color="transparent", text_color="white", border_color="#555555", border_width=1, width=100).pack(side="left", padx=2)
         
         # O botão de Sair foi movido para o Menu
         ctk.CTkButton(frame_menus, text="🚪 Sair (F10)", fg_color=COR_PRIMARIA, hover_color="#990000", text_color="white", width=80, command=self.fazer_logoff).pack(side="left", padx=20)
@@ -555,9 +557,24 @@ class AppAcademia(ctk.CTk):
         elif opcao_selecionada == "Alunos":
             self.renderizar_tela_alunos()
             
+        elif opcao_selecionada == "Financeiro":
+            self.renderizar_tela_financeiro()
+
+        elif opcao_selecionada == "Turmas e Horários":
+            self.renderizar_tela_turmas()
+            
         else:
             # Tela genérica para os módulos que ainda não têm função
             ctk.CTkLabel(self.area_trabalho, text=f"🚧 Módulo em Construção: {opcao_selecionada}", font=ctk.CTkFont(size=24, weight="bold"), text_color="orange").pack(pady=50)
+
+    def renderizar_tela_financeiro(self):
+        # Limpa a tela (útil se for chamado por um botão direto que não passa pelo navegar_cadastro)
+        for widget in self.area_trabalho.winfo_children():
+            widget.destroy()
+            
+        # Instancia a classe do módulo financeiro
+        tela = tela_financeiro.TelaFinanceiro(self.area_trabalho, self.usuario_logado, self.faixa_usuario)
+        tela.pack(fill="both", expand=True)
 
     def renderizar_tela_usuarios(self):
         # 🛑 TRAVA DE SEGURANÇA
@@ -567,10 +584,15 @@ class AppAcademia(ctk.CTk):
             
         tela = tela_usuarios.TelaUsuarios(self.area_trabalho, self.usuario_logado, self.faixa_usuario)
         tela.pack(fill="both", expand=True)
-        
+
     def renderizar_tela_alunos(self):
         # Instancia a classe do módulo externo e "cola" ela dentro da área de trabalho
         tela = tela_alunos.TelaAlunos(self.area_trabalho)
+        tela.pack(fill="both", expand=True)
+
+    def renderizar_tela_turmas(self):
+        # Instancia a classe do módulo de turmas
+        tela = tela_turmas.TelaTurmas(self.area_trabalho, self.usuario_logado, self.faixa_usuario)
         tela.pack(fill="both", expand=True)
 
     # --- 3. O MOTOR DO RELÓGIO (Adicione logo abaixo) ---

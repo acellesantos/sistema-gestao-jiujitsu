@@ -129,3 +129,75 @@ def deletar_usuario(user_id):
     cursor.execute("DELETE FROM usuarios WHERE id = ?", (user_id,))
     conn.commit()
     conn.close()
+
+def criar_tabela_pagamentos():
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS pagamentos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            aluno TEXT NOT NULL,
+            valor TEXT NOT NULL,
+            data TEXT NOT NULL,
+            status TEXT NOT NULL,
+            forma_pagamento TEXT NOT NULL
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+def registrar_pagamento(aluno, valor, forma, data, status):
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO pagamentos (aluno, valor, data, status, forma_pagamento)
+        VALUES (?, ?, ?, ?, ?)
+    """, (aluno, valor, data, status, forma))
+    conn.commit()
+    conn.close()
+
+def listar_pagamentos():
+    # Garante que a tabela exista antes de tentar ler
+    criar_tabela_pagamentos()
+    
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, aluno, valor, data, status, forma_pagamento FROM pagamentos ORDER BY id DESC")
+    dados = cursor.fetchall()
+    conn.close()
+    return dados
+
+def criar_tabela_turmas():
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS turmas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL,
+            dias TEXT NOT NULL,
+            horario TEXT NOT NULL,
+            professor TEXT NOT NULL
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+def cadastrar_turma(nome, dias, horario, professor):
+    criar_tabela_turmas()
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO turmas (nome, dias, horario, professor)
+        VALUES (?, ?, ?, ?)
+    """, (nome, dias, horario, professor))
+    conn.commit()
+    conn.close()
+
+def listar_turmas():
+    criar_tabela_turmas()
+    conn = conectar()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, nome, dias, horario, professor FROM turmas ORDER BY id DESC")
+    dados = cursor.fetchall()
+    conn.close()
+    return dados

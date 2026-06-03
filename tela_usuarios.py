@@ -42,7 +42,7 @@ class TelaUsuarios(ctk.CTkFrame):
         self.label_status.pack(pady=10)
 
         # No __init__, procure o botão de salvar e mude o command:
-ctk.CTkButton(frame_direita, text="Cadastrar Usuário", command=self.salvar_ou_atualizar, width=350, fg_color="#CC0000").pack(pady=20)
+        ctk.CTkButton(frame_direita, text="Cadastrar Usuário", command=self.salvar_ou_atualizar, width=350, fg_color="#CC0000").pack(pady=20)
         
         self.recarregar_lista()
 
