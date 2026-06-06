@@ -1,0 +1,22 @@
+# REGRAS DE ARQUITETURA E DESIGN DO SISTEMA JIU-JITSU
+
+1. TECNOLOGIAS E BIBLIOTECAS:
+- Python 3.x
+- Interface visual: Apenas `customtkinter` (NUNCA use o `tkinter` padrão).
+- Banco de dados: `sqlite3` (arquivo banco.sqlite).
+
+2. REGRAS DE UI/UX (Obrigatório):
+- O estilo visual do sistema é "Dashboard de ERP Corporativo / Prontuário Clínico".
+- Navegação de Telas: Utilize SEMPRE o conceito de "Telas Sobrepostas" (pack_forget no frame de pesquisa e pack no frame de formulário). NUNCA utilize telas divididas lado a lado (esquerda/direita) para listas e formulários.
+- Para evitar botões esmagados, formulários longos devem SEMPRE estar dentro de um `ctk.CTkScrollableFrame`.
+- Fontes: No CustomTkinter, para itálico use SEMPRE `slant="italic"`. NUNCA use `style="italic"`.
+
+3. REGRAS DE PERFORMANCE E DADOS:
+- Pesquisas e Listagens: Utilize sempre a abordagem de "Lazy Loading". As telas de busca devem iniciar vazias e só listar registros após o usuário clicar em "Filtrar".
+- Segurança de Senhas: As senhas no banco.py DEVEM ser tratadas com hash SHA256 (`hashlib`).
+- Ao atualizar registros, NUNCA sobrescreva senhas com strings vazias.
+- NUNCA exclua, modifique ou bloqueie o usuário master "admin".
+
+4. COMPORTAMENTO DO AGENTE (CLINE):
+- Ao receber uma tarefa de UI, mantenha as lógicas de negócio (`binds`, validações, formatação) 100% intactas.
+- Sempre adicione `print()` logs no terminal para operações de banco de dados (INSERT, UPDATE, DELETE) para facilitar o debug.

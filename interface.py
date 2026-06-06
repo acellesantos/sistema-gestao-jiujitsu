@@ -2,9 +2,10 @@ import customtkinter as ctk
 from datetime import datetime
 import banco  # Importa nosso arquivo de banco de dados
 import tela_alunos
-import tela_usuarios
+import cad_usuario
 import tela_financeiro
 import tela_turmas
+import tela_planos
 
 # Cores da Identidade Visual Rafael Farias BJJ
 COR_PRIMARIA = "#CC0000"  # O Vermelho vivo da sua logo
@@ -446,6 +447,7 @@ class AppAcademia(ctk.CTk):
         self.btn_login_login = ctk.CTkButton(self.frame_login, text="Entrar", command=self.fazer_login, width=300, height=40, fg_color=COR_PRIMARIA, hover_color="#990000", text_color="white")
         self.btn_login_login.pack(pady=20)
 
+
         self.label_status_login = ctk.CTkLabel(self.frame_login, text="", text_color="red")
         self.label_status_login.pack(pady=10)
 
@@ -467,7 +469,7 @@ class AppAcademia(ctk.CTk):
             self.mostrar_sistema_principal(usuario_digitado, faixa_banco)
         else:
             self.label_status_login.configure(text="❌ Usuário ou senha incorretos.")
-            self.entry_senha_login.delete(0, 'end')
+            self.entry_senha_login.delete(0, "end")
 
     def mostrar_sistema_principal(self, usuario_logado, faixa_logada):
 
@@ -544,7 +546,7 @@ class AppAcademia(ctk.CTk):
 
     def navegar_cadastro(self, opcao_selecionada):
         # 1. Volta o título do botão para o padrão
-        self.menu_cadastros.set("Cadastros ▼")
+        self.menu_cadastros.set("Cadastros")
         
         # 2. Limpa a tela atual (apaga a intranet ou qualquer formulário aberto)
         for widget in self.area_trabalho.winfo_children():
@@ -562,6 +564,12 @@ class AppAcademia(ctk.CTk):
 
         elif opcao_selecionada == "Turmas e Horários":
             self.renderizar_tela_turmas()
+
+        elif opcao_selecionada == "Planos de Mensalidade":
+            for widget in self.area_trabalho.winfo_children():
+                widget.destroy()
+            tela = tela_planos.TelaPlanos(self.area_trabalho, self.usuario_logado, self.faixa_usuario)
+            tela.pack(fill="both", expand=True)
             
         else:
             # Tela genérica para os módulos que ainda não têm função
@@ -582,7 +590,7 @@ class AppAcademia(ctk.CTk):
             # (Mantém a lógica de acesso negado aqui)
             return
             
-        tela = tela_usuarios.TelaUsuarios(self.area_trabalho, self.usuario_logado, self.faixa_usuario)
+        tela = cad_usuario.TelaUsuarios(self.area_trabalho, self.usuario_logado, self.faixa_usuario)
         tela.pack(fill="both", expand=True)
 
     def renderizar_tela_alunos(self):
